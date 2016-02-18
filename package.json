@@ -1,0 +1,25 @@
+{
+  "name": "magic",
+  "version": "1.0.0",
+  "description": "voxel engine",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/z3t0/magic.git"
+  },
+  "keywords": [
+    "game",
+    "voxel",
+    "gl",
+    "webgl"
+  ],
+  "author": "Rafi Khan",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/z3t0/magic/issues"
+  },
+  "homepage": "https://github.com/z3t0/magic#readme"
+}
