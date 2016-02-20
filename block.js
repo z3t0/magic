@@ -1,5 +1,6 @@
-var block = {
-  name: "Stone",
-  hardness: 2,
-  texture : ""
+exports.CreateBlock = function(id){
+  var block = new Object()
+  block.id = id;
+
+  return block;  
 }
