@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "wzrd index.js:bundle.min.js -p 8080",
-    "prepublish": "browserify index.js | uglifyjs -cm > bundle.min.js"
+    "prepublish": "browserify index.js render.js | uglifyjs -cm > bundle.min.js"
   },
   "repository": {
     "type": "git",
@@ -42,6 +42,7 @@
     "gl-context": "^0.1.1",
     "gl-mat4": "^1.1.4",
     "gl-shader": "^4.2.0",
-    "glslify": "^5.0.2"
+    "glslify": "^5.0.2",
+    "ndarray": "^1.0.18"
   }
 }
