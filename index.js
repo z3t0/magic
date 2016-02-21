@@ -13,7 +13,7 @@ var block    = require('./block.js')
 
 
 chunk = new chunker.Chunk()
-console.log(chunk.data)
+chunker.CreateCubeMesh(chunk, 0, 0, 0, 1)
 
 // Shader Program
 var shader = glShader(gl,
@@ -22,29 +22,20 @@ var shader = glShader(gl,
 )
 
 // Matrices
+var cubeMatrix = mat4.create()
 var triangleMatrix   = mat4.create()
 var squareMatrix     = mat4.create()
 var projectionMatrix = mat4.create()
 
 // Vertices
-var triangle = glBuffer(gl, new Float32Array([
-  +0.0, +1.0, +0.0,
-  -1.0, -1.0, +0.0,
-  +1.0, -1.0, +0.0
-]))
+cube = glBuffer(gl, new Float32Array(chunk.mesh))
 
-var square = glBuffer(gl, new Float32Array([
-  +1.0, +1.0, +0.0,
-  -1.0, +1.0, +0.0,
-  +1.0, -1.0, +0.0,
-  -1.0, -1.0, +0.0
-]))
+cube.length = 36
 
-triangle.length = 3 // number of vertices
-square.length = 4 // number of vertixes 
+var b = 0
 
 shell.on("render", function() {
-
+  b += 0.05
   var width = gl.drawingBufferWidth
   var height = gl.drawingBufferHeight
 
@@ -53,33 +44,23 @@ shell.on("render", function() {
   clear(gl)
   gl.viewport(0, 0, width, height)
 
-  // clear(width, height)
-  
   // Calculate projection matrix
   mat4.perspective(projectionMatrix, Math.PI / 4, width / height, 0.1, 100)
-  // Calculate triangle's modelView matrix
-  mat4.identity(triangleMatrix, triangleMatrix)
-  mat4.translate(triangleMatrix, triangleMatrix, [-1.5, 0, -7])
-  // Calculate squares's modelView matrix
-  mat4.copy(squareMatrix, triangleMatrix)
-  mat4.translate(squareMatrix, squareMatrix, [3, 0, 0])
+
+  // Calculate cube's modelView matrix
+  mat4.identity(cubeMatrix, cubeMatrix)
+  mat4.translate(cubeMatrix, cubeMatrix, [0, 0, -10])
+  mat4.rotateX(cubeMatrix, cubeMatrix, b)
 
   // Bind the shader
   shader.bind()
   shader.uniforms.uProjection = projectionMatrix
 
-  // Draw the triangle
-  triangle.bind()
+  // Draw the cube
+  cube.bind()
   shader.attributes.aPosition.pointer()
-  shader.uniforms.uModelView = triangleMatrix
-  gl.drawArrays(gl.TRIANGLES, 0, triangle.length)
-
-  // Draw the square
-  square.bind()
-  shader.attributes.aPosition.pointer()
-  shader.uniforms.uModelView = squareMatrix
-  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
-
+  shader.uniforms.uModelView = cubeMatrix
+  gl.drawArrays(gl.TRIANGLES, 0, cube.length)
 })
   
 
