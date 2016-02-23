@@ -8,34 +8,44 @@ var glShader = require('gl-shader')
 var glslify  = require('glslify')
 var shell    = require('game-shell')()
 var ndarray = require('ndarray')
-var chunker  = require('./chunker.js')
-var block    = require('./block.js')
+ chunker  = require('./chunker.js')
+ block    = require('./block.js')
 
 
 chunk = new chunker.Chunk()
-chunker.CreateCubeMesh(chunk, 0, 0, 0, 1)
+for (x = 0; x < chunk.size; x++){
+  for (y = 0; y < chunk.size; y++){
+    for (z = 0; z < chunk.size; z++){
+        chunker.SetBlock(chunk, x, y, z, new block.CreateBlock(1))
+    }
+  }
+}
 
-// Shader Program
 var shader = glShader(gl,
   glslify('./shader.vert'),
   glslify('./shader.frag')
 )
 
 // Matrices
-var cubeMatrix = mat4.create()
-var triangleMatrix   = mat4.create()
-var squareMatrix     = mat4.create()
+var vboMatrix = mat4.create()
 var projectionMatrix = mat4.create()
 
 // Vertices
-cube = glBuffer(gl, new Float32Array(chunk.mesh))
 
-cube.length = 36
+vbo = glBuffer(gl, new Float32Array(chunk.mesh))
+vbo.length = chunk.mesh.length / 3
 
 var b = 0
 
 shell.on("render", function() {
-  b += 0.05
+  if(chunk.remesh){
+    console.log("remeshing")
+    chunker.CreateMesh(chunk)
+    vbo = glBuffer(gl, new Float32Array(chunk.mesh))
+    vbo.length = chunk.mesh.length / 3
+
+  }
+  
   var width = gl.drawingBufferWidth
   var height = gl.drawingBufferHeight
 
@@ -48,19 +58,20 @@ shell.on("render", function() {
   mat4.perspective(projectionMatrix, Math.PI / 4, width / height, 0.1, 100)
 
   // Calculate cube's modelView matrix
-  mat4.identity(cubeMatrix, cubeMatrix)
-  mat4.translate(cubeMatrix, cubeMatrix, [0, 0, -10])
-  mat4.rotateX(cubeMatrix, cubeMatrix, b)
+  mat4.identity(vboMatrix, vboMatrix)
+  mat4.translate(vboMatrix, vboMatrix, [0, 0, -50])
+  mat4.rotateX(vboMatrix, vboMatrix, b)
+  mat4.rotateY(vboMatrix, vboMatrix, b)
 
   // Bind the shader
   shader.bind()
   shader.uniforms.uProjection = projectionMatrix
 
   // Draw the cube
-  cube.bind()
+  vbo.bind()
   shader.attributes.aPosition.pointer()
-  shader.uniforms.uModelView = cubeMatrix
-  gl.drawArrays(gl.TRIANGLES, 0, cube.length)
+  shader.uniforms.uModelView = vboMatrix
+  gl.drawArrays(gl.TRIANGLES, 0, vbo.length)
 })
   
 

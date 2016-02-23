@@ -8,6 +8,7 @@ exports.Chunk = function() {
   chunk.dims = [chunk.size, chunk.size, chunk.size]
   chunk.data = ndarray(new Array(chunk.dims[0] * chunk.dims[1] * chunk.dims[2]), chunk.dims)
   chunk.mesh = new Array()
+  chunk.remesh = false
 
   console.log(chunk.mesh)
 
@@ -15,7 +16,7 @@ exports.Chunk = function() {
   for (x = 0; x < chunk.size; x++) {
     for (y = 0; y < chunk.size; y++){
       for (z = 0; z < chunk.size; z++){
-        chunk.data.set(x,y,z, new block.CreateBlock(1))
+        chunk.data.set(x,y,z, new block.CreateBlock(0))
       }
     }
   }
@@ -30,11 +31,13 @@ exports.CreateMesh = function(chunk) {
     for (y = 0; y < chunk.size; y++){
       for (z = 0; z < chunk.size; z++){
         if(this.GetBlock(chunk, x, y, z).id){
-          CreateCubeMesh(chunk, x, y, z, 1)
+          this.CreateCubeMesh(chunk, x, y, z, 0.5)
         }
       }
     }
   }
+
+    chunk.remesh = 0;
 }
 
 
@@ -55,7 +58,7 @@ function AddTriangleToMesh(mesh, v1, v2, v3){
 exports.CreateCubeMesh = function(chunk, x, y, z, size) {
   
   points = new Array(8)
-  
+
   points[0] = [x - size, y - size, z + size]
   points[1] = [x + size, y - size, z + size]
   points[2] = [x + size, y + size, z + size]
@@ -65,36 +68,53 @@ exports.CreateCubeMesh = function(chunk, x, y, z, size) {
   points[6] = [x - size, y + size, z - size]
   points[7] = [x + size, y + size, z - size]
 
-  // Front
-  AddTriangleToMesh(chunk.mesh, points[0], points[1], points[2])
-  AddTriangleToMesh(chunk.mesh, points[0], points[2], points[3])
-
-  // Back
-  AddTriangleToMesh(chunk.mesh, points[4], points[5], points[6])
-  AddTriangleToMesh(chunk.mesh, points[4], points[6], points[7])
-
-  // Right
-  AddTriangleToMesh(chunk.mesh, points[1], points[4], points[7])
-  AddTriangleToMesh(chunk.mesh, points[1], points[7], points[2])
-
-  // Left
-  AddTriangleToMesh(chunk.mesh, points[5], points[0], points[3])
-  AddTriangleToMesh(chunk.mesh, points[5], points[3], points[6])
 
   // Top
-  AddTriangleToMesh(chunk.mesh, points[3], points[2], points[7])
-  AddTriangleToMesh(chunk.mesh, points[3], points[7], points[6])
+  if(!block.IsSolid(chunk, x, y + 1, z, block.Direction.down)) {
+    AddTriangleToMesh(chunk.mesh, points[3], points[2], points[7])
+    AddTriangleToMesh(chunk.mesh, points[3], points[7], points[6])
+  }
 
   // Bottom
-  AddTriangleToMesh(chunk.mesh, points[5], points[4], points[1])
-  AddTriangleToMesh(chunk.mesh, points[5], points[1], points[0])
+  if(!block.IsSolid(chunk, x, y - 1, z, block.Direction.up)) {
+    AddTriangleToMesh(chunk.mesh, points[5], points[4], points[1])
+    AddTriangleToMesh(chunk.mesh, points[5], points[1], points[0])
+  }
+
+  // Back
+  if(!block.IsSolid(chunk, x, y, z - 1, block.Direction.north)) {
+    AddTriangleToMesh(chunk.mesh, points[4], points[5], points[6])
+    AddTriangleToMesh(chunk.mesh, points[4], points[6], points[7])
+  }
+
+  // Front
+  if(!block.IsSolid(chunk, x, y, z + 1, block.Direction.south)) {
+    AddTriangleToMesh(chunk.mesh, points[0], points[1], points[2])
+    AddTriangleToMesh(chunk.mesh, points[0], points[2], points[3]) 
+  }
+
+  // Right
+  if(!block.IsSolid(chunk, x + 1, y, z, block.Direction.west)) {
+    AddTriangleToMesh(chunk.mesh, points[1], points[4], points[7])
+    AddTriangleToMesh(chunk.mesh, points[1], points[7], points[2])
+  }
+
+  // Left
+  if(!block.IsSolid(chunk, x - 1, y, z, block.Direction.east)) {
+    AddTriangleToMesh(chunk.mesh, points[5], points[0], points[3])
+    AddTriangleToMesh(chunk.mesh, points[5], points[3], points[6])
+  }
 
 }
 
 exports.GetBlock = function(chunk, x, y, z) {
-  return chunk.data.get(x,y,z)
+  if((x < chunk.size && x > -1) && (y < chunk.size && y > -1) && (z < chunk.size && z > -1)) 
+    return chunk.data.get(x,y,z)
+
+  return undefined;
 }
 
 exports.SetBlock = function(chunk, x, y, z, block) {
   chunk.data.set(x, y, z, block)
+  chunk.remesh = true;
 }
