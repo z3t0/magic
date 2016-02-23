@@ -1,11 +1,26 @@
-chunker = require('./chunker.js')
+var chunker = require('./chunker.js')
+var textureLoader = require('./texture.js')
+
+var server = require('./server.js')
+
+// TODO: Resource Loading
+var stoneTexture;
+
+textureLoader.LoadTexture('./textures/stone.jpg')
 
 exports.CreateBlock = function(id){
   var block = new Object()
   block.id = id
+  // console.log(stoneTexture)
+  if(typeof stoneTexture !=='undefined')
+      block.texture = stoneTexture
+  
+  else   {
+    console.error("Stone Texture was not defined")
+    console.log(stoneTexture)
+  }
 
-
-  return block  
+  return block 
 }
 
 exports.Direction = {
@@ -17,6 +32,12 @@ exports.Direction = {
   down: 6
 }
 
+exports.SaveTexture = function(data) {
+  console.log("Texture being saved")
+  stoneTexture = data;
+  console.log(stoneTexture)
+  server.emit('loadedTextures')
+}
 exports.IsSolid = function(chunk, x, y, z, direction) {
   block = chunker.GetBlock(chunk, x, y, z) // 1 -1 0
   if(block === undefined) {

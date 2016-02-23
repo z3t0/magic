@@ -13,13 +13,13 @@ exports.Chunk = function() {
   console.log(chunk.mesh)
 
   // Set all blocks
-  for (x = 0; x < chunk.size; x++) {
-    for (y = 0; y < chunk.size; y++){
-      for (z = 0; z < chunk.size; z++){
-        chunk.data.set(x,y,z, new block.CreateBlock(0))
-      }
-    }
-  }
+  // for (x = 0; x < chunk.size; x++) {
+  //   for (y = 0; y < chunk.size; y++){
+  //     for (z = 0; z < chunk.size; z++){
+  //       chunk.data.set(x,y,z, new block.CreateBlock(0))
+  //     }
+  //   }
+  // }
 
   console.log("Created Chunk")
   return chunk
@@ -30,6 +30,8 @@ exports.CreateMesh = function(chunk) {
   for (x = 0; x < chunk.size; x++) {
     for (y = 0; y < chunk.size; y++){
       for (z = 0; z < chunk.size; z++){
+        if(typeof this.GetBlock(chunk, x, y, z) === 'undefined')
+          continue;
         if(this.GetBlock(chunk, x, y, z).id){
           this.CreateCubeMesh(chunk, x, y, z, 0.5)
         }
