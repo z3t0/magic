@@ -11,13 +11,11 @@ textureLoader.LoadTexture('./textures/stone.jpg')
 exports.CreateBlock = function(id){
   var block = new Object()
   block.id = id
-  // console.log(stoneTexture)
   if(typeof stoneTexture !=='undefined')
       block.texture = stoneTexture
   
   else   {
     console.error("Stone Texture was not defined")
-    console.log(stoneTexture)
   }
 
   return block 
@@ -33,9 +31,7 @@ exports.Direction = {
 }
 
 exports.SaveTexture = function(data) {
-  console.log("Texture being saved")
   stoneTexture = data;
-  console.log(stoneTexture)
   server.emit('loadedTextures')
 }
 exports.IsSolid = function(chunk, x, y, z, direction) {

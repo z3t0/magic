@@ -1,29 +1,35 @@
 // Browserify
 var canvas   = document.body.appendChild(document.createElement('canvas'))
 var clear    = require('gl-clear')({ color: [0, 0, 0, 1] })
-var gl       = require('gl-context')(canvas)
 var glBuffer = require('gl-buffer')
 var mat4     = require('gl-mat4')
 var glShader = require('gl-shader')
 var glslify  = require('glslify')
-var shell    = require('game-shell')()
 var path     = require('path')
 var events    = require('events')
 var ndarray  = require('ndarray')
+var gl       = require('gl-context')(canvas, render);
+
 var chunker  = require('./chunker.js')
 var block    = require('./block.js')
 var createTexture = require('gl-texture2d')
 var textureLoader = require('./texture.js')
 var server = require('./server.js')
+var chunk_manager = require('./chunk_manager.js')
+
+chunk_manager.CreateChunks();
+chunk_manager.SetBlock(0, 25, 0, new block.CreateBlock(1))
+console.log(chunk_manager.GetBlock(0, 25, 0))
+console.log(chunk_manager.GetBlock(0, 0, 0))
+
+console.log(chunk_manager.chunkList)
 
 server.on('loadedTextures', function () {
-  enginestatus.ResourcesLoaded = true;
-  console.log("ResourcesLoaded")
-  server.emit('ready')
+  // server.emit('ready')
 })
 
 enginestatus = {
-  ResourcesLoaded: false,
+  ready: false,
 }
 
 var chunk
@@ -42,7 +48,7 @@ server.on('ready', function() {
       for (z = 0; z < chunk.size; z++){
           chunker.SetBlock(chunk, x, y, z, new block.CreateBlock(1))
       }
-    }
+    }   
   }
 
   chunker.SetBlock(chunk, 0, 0, 0, new block.CreateBlock(1))
@@ -63,12 +69,12 @@ server.on('ready', function() {
   texture = createTexture(gl, chunker.GetBlock(chunk, 0, 0, 0).texture)
   shader.uniforms.texture = texture.bind()
 
-
+  enginestatus.ready = true;
 })
 
 // Render function
-shell.on("render", function() {
-  if(enginestatus.ResourcesLoaded){
+function render() {
+  if(enginestatus.ready){
 
     if(chunk.remesh){
       console.log("remeshing")
@@ -104,8 +110,7 @@ shell.on("render", function() {
     gl.drawArrays(gl.TRIANGLES, 0, vbo.length)
   }
     
-})
-  
+}
 
 // Resize the canvas to fit the screen
 window.addEventListener('resize'

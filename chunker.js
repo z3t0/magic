@@ -1,8 +1,7 @@
 var ndarray = require('ndarray')
 var block   = require('./block.js')
-var vec3    = require('gl-vec3')
 
-exports.Chunk = function() {
+exports.CreateChunk = function() {
   var chunk = new Object()
   chunk.size = 16
   chunk.dims = [chunk.size, chunk.size, chunk.size]
@@ -10,18 +9,6 @@ exports.Chunk = function() {
   chunk.mesh = new Array()
   chunk.remesh = false
 
-  console.log(chunk.mesh)
-
-  // Set all blocks
-  // for (x = 0; x < chunk.size; x++) {
-  //   for (y = 0; y < chunk.size; y++){
-  //     for (z = 0; z < chunk.size; z++){
-  //       chunk.data.set(x,y,z, new block.CreateBlock(0))
-  //     }
-  //   }
-  // }
-
-  console.log("Created Chunk")
   return chunk
 }
 
@@ -38,8 +25,8 @@ exports.CreateMesh = function(chunk) {
       }
     }
   }
-
-    chunk.remesh = 0;
+  
+  chunk.remesh = 0;
 }
 
 
