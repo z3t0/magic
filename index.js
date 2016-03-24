@@ -5,20 +5,16 @@ var glBuffer = require('gl-buffer')
 var mat4     = require('gl-mat4')
 var glShader = require('gl-shader')
 var glslify  = require('glslify')
-var path     = require('path')
-var events    = require('events')
-var ndarray  = require('ndarray')
 var gl       = require('gl-context')(canvas, render);
 
-var chunker  = require('./chunker.js')
 var block    = require('./block.js')
 var createTexture = require('gl-texture2d')
-var textureLoader = require('./texture.js')
 var server = require('./server.js')
 var chunk_manager = require('./chunk_manager.js')
 //=====================================================
 // TODO: figure out a better way to handle the render loop call
 
+block.LoadTextures()
 chunk_manager.CreateChunks();
 
 server.on('loadedTextures', function () {
@@ -29,7 +25,6 @@ enginestatus = {
     ready: false,
 }
 
-var chunk
 var shader
 var vboMatrix
 var projectionMatrix
@@ -39,15 +34,15 @@ var texture
 server.on('ready', function() {
 
     chunk_manager.SetBlock(0, 0, 0, new block.CreateBlock(1))
+    // chunk_manager.SetBlock(1, 0, 0, new block.CreateBlock(2))
     chunk_manager.CreateMesh()
     chunk_manager.AddToMesh(chunk_manager.chunkList.get(0, 0, 0).mesh)
 
-    console.log(block.stoneTexture)
 
     // Create Shader Program
     shader = glShader(gl,
     glslify('./shader.vert'),
-    glslify('./shader2.frag')
+    glslify('./shader3.frag')
     )
 
     // Matrices
@@ -57,8 +52,9 @@ server.on('ready', function() {
     vbo = glBuffer(gl, new Float32Array(chunk_manager.mesh))
     vbo.length = chunk_manager.mesh.length / 3
 
-    texture = createTexture(gl, block.stoneTexture)
+    texture = createTexture(gl, block.texture)
     shader.uniforms.texture = texture.bind()
+    shader.uniforms.texCoord = [0, 1]
 
     enginestatus.ready = true;
     console.log(chunk_manager)
@@ -83,7 +79,7 @@ function render() {
 
         // Calculate cube's modelView matrix
         mat4.identity(vboMatrix, vboMatrix)
-        mat4.translate(vboMatrix, vboMatrix, [0, 0, -50])
+        mat4.translate(vboMatrix, vboMatrix, [0, 0, -20])
 
         // Bind the shader
         shader.bind()
@@ -99,7 +95,4 @@ function render() {
 }
 
 // Resize the canvas to fit the screen
-window.addEventListener('resize'
-            , require('canvas-fit')(canvas)
-            , false
-                       )
+window.addEventListener('resize', require('canvas-fit')(canvas), false)

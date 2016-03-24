@@ -1,3 +1,8 @@
 var events = require('events')
 
-module.exports = new events.EventEmitter
+exports.debug = function(msg){
+    // TODO: Add more functionality
+    console.log(msg)
+}
+
+module.exports = new events.EventEmitter()

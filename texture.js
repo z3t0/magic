@@ -1,15 +1,12 @@
-var events = require('events')
-var server = require('./server.js')
 var block = require('./block.js')
 
 // TOOD: more efficient system for other textures too, look at an atlast next.
 //       only have to bind texture once, after that I simply have to specify coordinates for textures, hence I will
 //       mainly be dealng with coordinates in the code
 
-exports.LoadTexture = function(path) {
-  var texture;
+exports.LoadTexture = function(path, texture) {
 
-  var getPixels = require('get-pixels') 
+  var getPixels = require('get-pixels')
 
   getPixels(path, function(err, data) {
     if(err) {
@@ -17,6 +14,8 @@ exports.LoadTexture = function(path) {
       return
     }
 
-    block.SaveTexture(data);
+    console.log("Texture being loaded: " + path)
+
+    block.SaveTexture(data, texture);
   })
 }
