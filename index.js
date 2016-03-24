@@ -1,90 +1,98 @@
-// Browserify
+// Browserify require modules
 var canvas   = document.body.appendChild(document.createElement('canvas'))
 var clear    = require('gl-clear')({ color: [0, 0, 0, 1] })
-var gl       = require('gl-context')(canvas)
 var glBuffer = require('gl-buffer')
 var mat4     = require('gl-mat4')
 var glShader = require('gl-shader')
 var glslify  = require('glslify')
-var shell    = require('game-shell')()
-var ndarray = require('ndarray')
-var chunker  = require('./chunker.js')
+var gl       = require('gl-context')(canvas, render);
+
 var block    = require('./block.js')
+var createTexture = require('gl-texture2d')
+var server = require('./server.js')
+var chunk_manager = require('./chunk_manager.js')
+//=====================================================
+// TODO: figure out a better way to handle the render loop call
 
+block.LoadTextures()
+chunk_manager.CreateChunks();
 
-chunk = new chunker.Chunk()
-console.log(chunk.data)
-
-// Shader Program
-var shader = glShader(gl,
-  glslify('./shader.vert'),
-  glslify('./shader.frag')
-)
-
-// Matrices
-var triangleMatrix   = mat4.create()
-var squareMatrix     = mat4.create()
-var projectionMatrix = mat4.create()
-
-// Vertices
-var triangle = glBuffer(gl, new Float32Array([
-  +0.0, +1.0, +0.0,
-  -1.0, -1.0, +0.0,
-  +1.0, -1.0, +0.0
-]))
-
-var square = glBuffer(gl, new Float32Array([
-  +1.0, +1.0, +0.0,
-  -1.0, +1.0, +0.0,
-  +1.0, -1.0, +0.0,
-  -1.0, -1.0, +0.0
-]))
-
-triangle.length = 3 // number of vertices
-square.length = 4 // number of vertixes 
-
-shell.on("render", function() {
-
-  var width = gl.drawingBufferWidth
-  var height = gl.drawingBufferHeight
-
-  // Clear the screen and set the viewport before
-  // drawing anything
-  clear(gl)
-  gl.viewport(0, 0, width, height)
-
-  // clear(width, height)
-  
-  // Calculate projection matrix
-  mat4.perspective(projectionMatrix, Math.PI / 4, width / height, 0.1, 100)
-  // Calculate triangle's modelView matrix
-  mat4.identity(triangleMatrix, triangleMatrix)
-  mat4.translate(triangleMatrix, triangleMatrix, [-1.5, 0, -7])
-  // Calculate squares's modelView matrix
-  mat4.copy(squareMatrix, triangleMatrix)
-  mat4.translate(squareMatrix, squareMatrix, [3, 0, 0])
-
-  // Bind the shader
-  shader.bind()
-  shader.uniforms.uProjection = projectionMatrix
-
-  // Draw the triangle
-  triangle.bind()
-  shader.attributes.aPosition.pointer()
-  shader.uniforms.uModelView = triangleMatrix
-  gl.drawArrays(gl.TRIANGLES, 0, triangle.length)
-
-  // Draw the square
-  square.bind()
-  shader.attributes.aPosition.pointer()
-  shader.uniforms.uModelView = squareMatrix
-  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
-
+server.on('loadedTextures', function () {
+    server.emit('ready')
 })
-  
+
+enginestatus = {
+    ready: false,
+}
+
+var shader
+var vboMatrix
+var projectionMatrix
+var vbo
+var texture
+
+server.on('ready', function() {
+
+    chunk_manager.SetBlock(0, 0, 0, new block.CreateBlock(1))
+    // chunk_manager.SetBlock(1, 0, 0, new block.CreateBlock(2))
+    chunk_manager.CreateMesh()
+    chunk_manager.AddToMesh(chunk_manager.chunkList.get(0, 0, 0).mesh)
+
+
+    // Create Shader Program
+    shader = glShader(gl,
+    glslify('./shader.vert'),
+    glslify('./shader3.frag')
+    )
+
+    // Matrices
+    vboMatrix = mat4.create()
+    projectionMatrix = mat4.create()
+
+    vbo = glBuffer(gl, new Float32Array(chunk_manager.mesh))
+    vbo.length = chunk_manager.mesh.length / 3
+
+    texture = createTexture(gl, block.texture)
+    shader.uniforms.texture = texture.bind()
+    shader.uniforms.texCoord = [0, 1]
+
+    enginestatus.ready = true;
+    console.log(chunk_manager)
+    console.log("Engine is ready!")
+    console.log("===========================================")
+})
+
+// Render function
+function render() {
+    if(enginestatus.ready){
+
+        var width = gl.drawingBufferWidth
+        var height = gl.drawingBufferHeight
+
+        // Clear the screen and set the viewport before
+        // drawing anything
+        clear(gl)
+        gl.viewport(0, 0, width, height)
+
+        // Calculate projection matrix
+        mat4.perspective(projectionMatrix, Math.PI / 4, width / height, 0.1, 100)
+
+        // Calculate cube's modelView matrix
+        mat4.identity(vboMatrix, vboMatrix)
+        mat4.translate(vboMatrix, vboMatrix, [0, 0, -20])
+
+        // Bind the shader
+        shader.bind()
+        shader.uniforms.uProjection = projectionMatrix
+
+        // Draw the mesh
+        vbo.bind()
+        shader.attributes.aPosition.pointer()
+        shader.uniforms.uModelView = vboMatrix
+        gl.drawArrays(gl.TRIANGLES, 0, vbo.length)
+    }
+
+}
 
 // Resize the canvas to fit the screen
-window.addEventListener('resize'
-  , require('canvas-fit')(canvas)
-  , false
-)
+window.addEventListener('resize', require('canvas-fit')(canvas), false)
