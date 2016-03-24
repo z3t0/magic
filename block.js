@@ -4,7 +4,7 @@ var textureLoader = require('./texture.js')
 var server = require('./server.js')
 
 // TODO: Resource Loading
-var stoneTexture;
+exports.stoneTexture
 
 textureLoader.LoadTexture('./textures/stone.jpg')
 
@@ -13,12 +13,12 @@ exports.CreateBlock = function(id){
   block.id = id
   if(typeof stoneTexture !=='undefined')
       block.texture = stoneTexture
-  
+
   else   {
     console.error("Stone Texture was not defined")
   }
 
-  return block 
+  return block
 }
 
 exports.Direction = {
@@ -31,9 +31,10 @@ exports.Direction = {
 }
 
 exports.SaveTexture = function(data) {
-  stoneTexture = data;
+  this.stoneTexture = data;
   server.emit('loadedTextures')
 }
+
 exports.IsSolid = function(chunk, x, y, z, direction) {
   block = chunker.GetBlock(chunk, x, y, z) // 1 -1 0
   if(block === undefined) {

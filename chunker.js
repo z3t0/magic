@@ -8,6 +8,7 @@ exports.CreateChunk = function() {
   chunk.data = ndarray(new Array(chunk.dims[0] * chunk.dims[1] * chunk.dims[2]), chunk.dims)
   chunk.mesh = new Array()
   chunk.remesh = false
+  chunk.empty = true
 
   return chunk
 }
@@ -25,7 +26,7 @@ exports.CreateMesh = function(chunk) {
       }
     }
   }
-  
+
   chunk.remesh = 0;
 }
 
@@ -45,7 +46,7 @@ function AddTriangleToMesh(mesh, v1, v2, v3){
 }
 
 exports.CreateCubeMesh = function(chunk, x, y, z, size) {
-  
+
   points = new Array(8)
 
   points[0] = [x - size, y - size, z + size]

@@ -16,7 +16,7 @@ exports.LoadTexture = function(path) {
       console.log("Bad image path")
       return
     }
-    
+
     block.SaveTexture(data);
   })
 }
