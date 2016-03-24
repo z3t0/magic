@@ -1,4 +1,5 @@
 node_modules
+bundle.min.js
 
 *.sublime-project
 *.sublime-workspacebundle.min.js
