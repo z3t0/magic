@@ -8,7 +8,7 @@ var glShader = require('gl-shader')
 var glslify  = require('glslify')
 var shell    = require('game-shell')()
 var ndarray = require('ndarray')
-var chunker  = require('./chunker.js')
+var createChunk  = require('./chunk.js')
 var block    = require('./block.js')
 
 // Shader Program
@@ -19,67 +19,16 @@ var shader = glShader(gl,
 
 // Matrices
 var projectionMatrix = mat4.create()
-var cubeMatrix = mat4.create()
+var chunkMatrix = mat4.create()
+
+// Chunk
+var chunk = new createChunk()
+chunk.CreateMesh()
 
 // Vertices
+var mesh = glBuffer(gl, chunk.mesh)
 
-var cube = glBuffer(gl, new Float32Array([
-    // Front
-    +1.0, +1.0, +1.0,
-    +1.0, -1.0, +1.0,
-    -1.0, -1.0, +1.0,
-
-    -1.0, -1.0, +1.0,
-    -1.0, +1.0, +1.0,
-    +1.0, +1.0, +1.0,
-
-    // Back
-    +1.0, +1.0, -1.0,
-    +1.0, -1.0, -1.0,
-    -1.0, -1.0, -1.0,
-
-    -1.0, -1.0, -1.0,
-    -1.0, +1.0, -1.0,
-    +1.0, +1.0, -1.0,
-
-    // Left
-    -1.0, +1.0, +1.0,
-    -1.0, -1.0, +1.0,
-    -1.0, -1.0, -1.0,
-
-    -1.0, -1.0, -1.0,
-    -1.0, +1.0, -1.0,
-    -1.0, +1.0, +1.0,
-
-    // Right
-    +1.0, +1.0, +1.0,
-    +1.0, -1.0, +1.0,
-    +1.0, -1.0, -1.0,
-
-    +1.0, -1.0, -1.0,
-    +1.0, +1.0, -1.0,
-    +1.0, +1.0, +1.0,
-
-    // Top
-    +1.0, +1.0, -1.0,
-    +1.0, +1.0, +1.0,
-    -1.0, +1.0, +1.0,
-
-    -1.0, +1.0, +1.0,
-    -1.0, +1.0, -1.0,
-    +1.0, +1.0, -1.0,
-
-    // Bottom
-    +1.0, -1.0, -1.0,
-    +1.0, -1.0, +1.0,
-    -1.0, -1.0, +1.0,
-
-    -1.0, -1.0, +1.0,
-    -1.0, -1.0, -1.0,
-    +1.0, -1.0, -1.0,
-]))
-
-cube.length = 6 * 2 * 3
+mesh.length = 16 * 16 * 16 * 6 * 2 * 3
 
 var xRot = 0;
 var yRot = 0;
@@ -97,26 +46,17 @@ shell.on("render", function() {
     // Calculate projection matrix
     mat4.perspective(projectionMatrix, Math.PI / 4, width / height, 0.1, 100)
 
-    // Cube
-    mat4.identity(cubeMatrix, cubeMatrix)
-    mat4.translate(cubeMatrix, cubeMatrix, [0, 0, -5])
-
-    mat4.rotateX(cubeMatrix, cubeMatrix, xRot)
-    mat4.rotateY(cubeMatrix, cubeMatrix, yRot)
-
-    yRot += 0.01
-    xRot += 0.01
-
+    mat4.identity(chunkMatrix, chunkMatrix)
 
     // Bind the shader
     shader.bind()
     shader.uniforms.uProjection = projectionMatrix
 
     // draw the cube
-    cube.bind()
+    mesh.bind()
     shader.attributes.aPosition.pointer()
-    shader.uniforms.uModelView = cubeMatrix
-    gl.drawArrays(gl.TRIANGLES, 0, cube.length)
+    shader.uniforms.uModelView = chunkMatrix
+    gl.drawArrays(gl.TRIANGLES, 0, mesh.length)
 })
 
 // Resize the canvas to fit the screen
