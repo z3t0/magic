@@ -11,80 +11,116 @@ var ndarray = require('ndarray')
 var chunker  = require('./chunker.js')
 var block    = require('./block.js')
 
-
-chunk = new chunker.Chunk()
-console.log(chunk.data)
-
 // Shader Program
 var shader = glShader(gl,
-  glslify('./shader.vert'),
-  glslify('./shader.frag')
+    glslify('./shader.vert'),
+    glslify('./shader.frag')
 )
 
 // Matrices
-var triangleMatrix   = mat4.create()
-var squareMatrix     = mat4.create()
 var projectionMatrix = mat4.create()
+var cubeMatrix = mat4.create()
 
 // Vertices
-var triangle = glBuffer(gl, new Float32Array([
-  +0.0, +1.0, +0.0,
-  -1.0, -1.0, +0.0,
-  +1.0, -1.0, +0.0
+
+var cube = glBuffer(gl, new Float32Array([
+    // Front
+    +1.0, +1.0, +1.0,
+    +1.0, -1.0, +1.0,
+    -1.0, -1.0, +1.0,
+
+    -1.0, -1.0, +1.0,
+    -1.0, +1.0, +1.0,
+    +1.0, +1.0, +1.0,
+
+    // Back
+    +1.0, +1.0, -1.0,
+    +1.0, -1.0, -1.0,
+    -1.0, -1.0, -1.0,
+
+    -1.0, -1.0, -1.0,
+    -1.0, +1.0, -1.0,
+    +1.0, +1.0, -1.0,
+
+    // Left
+    -1.0, +1.0, +1.0,
+    -1.0, -1.0, +1.0,
+    -1.0, -1.0, -1.0,
+
+    -1.0, -1.0, -1.0,
+    -1.0, +1.0, -1.0,
+    -1.0, +1.0, +1.0,
+
+    // Right
+    +1.0, +1.0, +1.0,
+    +1.0, -1.0, +1.0,
+    +1.0, -1.0, -1.0,
+
+    +1.0, -1.0, -1.0,
+    +1.0, +1.0, -1.0,
+    +1.0, +1.0, +1.0,
+
+    // Top
+    +1.0, +1.0, -1.0,
+    +1.0, +1.0, +1.0,
+    -1.0, +1.0, +1.0,
+
+    -1.0, +1.0, +1.0,
+    -1.0, +1.0, -1.0,
+    +1.0, +1.0, -1.0,
+
+    // Bottom
+    +1.0, -1.0, -1.0,
+    +1.0, -1.0, +1.0,
+    -1.0, -1.0, +1.0,
+
+    -1.0, -1.0, +1.0,
+    -1.0, -1.0, -1.0,
+    +1.0, -1.0, -1.0,
 ]))
 
-var square = glBuffer(gl, new Float32Array([
-  +1.0, +1.0, +0.0,
-  -1.0, +1.0, +0.0,
-  +1.0, -1.0, +0.0,
-  -1.0, -1.0, +0.0
-]))
+cube.length = 6 * 2 * 3
 
-triangle.length = 3 // number of vertices
-square.length = 4 // number of vertixes 
+var xRot = 0;
+var yRot = 0;
 
 shell.on("render", function() {
 
-  var width = gl.drawingBufferWidth
-  var height = gl.drawingBufferHeight
+    var width = gl.drawingBufferWidth
+    var height = gl.drawingBufferHeight
 
-  // Clear the screen and set the viewport before
-  // drawing anything
-  clear(gl)
-  gl.viewport(0, 0, width, height)
+    // Clear the screen and set the viewport before
+    // drawing anything
+    clear(gl)
+    gl.viewport(0, 0, width, height)
 
-  // clear(width, height)
-  
-  // Calculate projection matrix
-  mat4.perspective(projectionMatrix, Math.PI / 4, width / height, 0.1, 100)
-  // Calculate triangle's modelView matrix
-  mat4.identity(triangleMatrix, triangleMatrix)
-  mat4.translate(triangleMatrix, triangleMatrix, [-1.5, 0, -7])
-  // Calculate squares's modelView matrix
-  mat4.copy(squareMatrix, triangleMatrix)
-  mat4.translate(squareMatrix, squareMatrix, [3, 0, 0])
+    // Calculate projection matrix
+    mat4.perspective(projectionMatrix, Math.PI / 4, width / height, 0.1, 100)
 
-  // Bind the shader
-  shader.bind()
-  shader.uniforms.uProjection = projectionMatrix
+    // Cube
+    mat4.identity(cubeMatrix, cubeMatrix)
+    mat4.translate(cubeMatrix, cubeMatrix, [0, 0, -5])
 
-  // Draw the triangle
-  triangle.bind()
-  shader.attributes.aPosition.pointer()
-  shader.uniforms.uModelView = triangleMatrix
-  gl.drawArrays(gl.TRIANGLES, 0, triangle.length)
+    mat4.rotateX(cubeMatrix, cubeMatrix, xRot)
+    mat4.rotateY(cubeMatrix, cubeMatrix, yRot)
 
-  // Draw the square
-  square.bind()
-  shader.attributes.aPosition.pointer()
-  shader.uniforms.uModelView = squareMatrix
-  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+    yRot += 0.01
+    xRot += 0.01
 
+
+    // Bind the shader
+    shader.bind()
+    shader.uniforms.uProjection = projectionMatrix
+
+    // draw the cube
+    cube.bind()
+    shader.attributes.aPosition.pointer()
+    shader.uniforms.uModelView = cubeMatrix
+    gl.drawArrays(gl.TRIANGLES, 0, cube.length)
 })
-  
 
 // Resize the canvas to fit the screen
 window.addEventListener('resize'
-  , require('canvas-fit')(canvas)
-  , false
+    , require('canvas-fit')(canvas)
+    , false
 )
